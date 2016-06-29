@@ -29,7 +29,7 @@ bat %>% filter(!(Name=="Name"))->bat
 field %>% filter(!(Name=="Name"))->field
 bat %>% select(-1)->bat
 field %>% select(-1)->field
-## Use only the row of total stats for hitters with multiple teams and filter out players that have not take the field
+## Use only the row of total stats for hitters with multiple teams and filter out players that have not taken the field
 bat %>% group_by(Name) %>% filter(G==max(G))->bat
 scrubs<-setdiff(bat$Name,field$Name)[1:2]
 bat %>% filter(!(Name==scrubs[1]|Name==scrubs[2]))->bat
@@ -40,9 +40,17 @@ bat[,4:27]<-sapply(bat[,4:27],as.numeric)
 ## Add Errors from field and create points column
 bat %>% mutate(E=as.numeric(field$E))->bat
 bat %>% mutate(X1B=H-X2B-X3B-HR,Points=X1B+R+RBI+BB+SB+(2*X2B)+(4*X3B)+(4*HR)-E)->bat
-
-
-
+## add the position summary from the fielding data, really weird behavior, breaks if i don't have an empty select
+bat$Position<-field$Pos.Summary
+## remove pitchers
+bat %>% filter(!(Position == "P"))->bat
+###### download and clean starting pitching tables
+pitchCSS<-"#players_starter_pitching.sortable.stats_table"
+pitchURL<-"http://www.baseball-reference.com/leagues/NL/2016-starter-pitching.shtml"
+read_html(pitchURL) %>% html_node(pitchCSS) %>% html_table()->pitch
+Encoding(pitch$Name)<-'UTF-8'
+pitch$Name<-make.names(pitch$Name)
+pitch$Name<-gsub('[.]'," ",pitch$Name)
 
 
 
